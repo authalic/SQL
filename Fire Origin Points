@@ -1,0 +1,15 @@
+/****** Script for SelectTopNRows command from SSMS  ******/
+SELECT
+	[uniqueIdentifier],
+	[fireCode],
+	[incidentName],
+	[landOwner],
+	[protectingUnit],
+	[fireCause],
+	[specificCause],
+	[discoveryDate],
+	[pointOfOrigin].Long as LON,
+	[pointOfOrigin].Lat as LAT
+FROM [fire].[dbo].[StartLocationView]
+WHERE [discoveryDate] > CONVERT(datetime, '2018-01-01')	AND NOT (LOWER([incidentName]) LIKE '%false%' OR LOWER([incidentName]) LIKE '%rx%')
+ORDER BY [discoveryDate]
