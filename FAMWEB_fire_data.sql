@@ -1,47 +1,67 @@
+
+/*
+Justin Johnson
+jjohnson2@utah.gov
+June 2019
+
+Exports a table of Fire Occurrence Data from SQL Server
+suitable for importing into FAMWEB Data Warehouse. See:
+
+https://fam.nwcg.gov/fam-web/
+
+Pre: Change the date range in the WHERE clause to match the
+desired start and end dates
+
+Post: After exporting table to a report or text file, remove
+any messages appearing below the last row of the table.
+example --> (1340 rows affected)
+*/
+
 SELECT
     INCIDENT.number as LocalIncidentID,
     FORMAT(INCIDENT.startDate, 'MM/dd/yyyy') as FireDiscoveryDate,
     INCIDENT.name as IncidentName,
-    FORMAT(INCIDENT.startDate, 'HHmm') as FireDiscoveryTime,
-    FORMAT(INCIDENT.endDate, 'MM/dd/yyyy') as FireContainmentDate,
-    FORMAT(INCIDENT.endDate, 'HHmm') as FireContainmentTime,
+    ISNULL(FORMAT(INCIDENT.startDate, 'HHmm'), '') as FireDiscoveryTime,
+    ISNULL(FORMAT(INCIDENT.endDate, 'MM/dd/yyyy'), '') as FireContainmentDate,
+    ISNULL(FORMAT(INCIDENT.endDate, 'HHmm'), '') as FireContainmentTime,
     LEFT(INCIDENT.number, 5) as FireReportingAgencyUnitIdentifier,
     'UT' as State,  -- non-Utah fires are filtered out in the WHERE clause
     '49' as StateFIPS,
-    COUNTYNAME.name as CountyName,
+    ISNULL(COUNTYNAME.name, '') as County,
     "CountyFIPS" = 
         CASE
-            WHEN COUNTYNAME.id = 2  THEN '49001' -- Beaver
-            WHEN COUNTYNAME.id = 3  THEN '49003' -- Box Elder
-            WHEN COUNTYNAME.id = 4  THEN '49005' -- Cache
-            WHEN COUNTYNAME.id = 5  THEN '49007' -- Carbon
-            WHEN COUNTYNAME.id = 6  THEN '49009' -- Daggett
-            WHEN COUNTYNAME.id = 7  THEN '49011' -- Davis
-            WHEN COUNTYNAME.id = 8  THEN '49013' -- Duchesne
-            WHEN COUNTYNAME.id = 9  THEN '49015' -- Emery
-            WHEN COUNTYNAME.id = 10 THEN '49017' -- Garfield
-            WHEN COUNTYNAME.id = 11 THEN '49019' -- Grand
-            WHEN COUNTYNAME.id = 12 THEN '49021' -- Iron
-            WHEN COUNTYNAME.id = 13 THEN '49023' -- Juab
-            WHEN COUNTYNAME.id = 14 THEN '49025' -- Kane
-            WHEN COUNTYNAME.id = 15 THEN '49027' -- Millard
-            WHEN COUNTYNAME.id = 16 THEN '49029' -- Morgan
-            WHEN COUNTYNAME.id = 17 THEN '49031' -- Piute
-            WHEN COUNTYNAME.id = 18 THEN '49033' -- Rich
-            WHEN COUNTYNAME.id = 1  THEN '49035' -- Salt Lake
-            WHEN COUNTYNAME.id = 19 THEN '49037' -- San Juan
-            WHEN COUNTYNAME.id = 20 THEN '49039' -- Sanpete
-            WHEN COUNTYNAME.id = 21 THEN '49041' -- Sevier
-            WHEN COUNTYNAME.id = 22 THEN '49043' -- Summit
-            WHEN COUNTYNAME.id = 23 THEN '49045' -- Tooele
-            WHEN COUNTYNAME.id = 24 THEN '49047' -- Uintah
-            WHEN COUNTYNAME.id = 25 THEN '49049' -- Utah
-            WHEN COUNTYNAME.id = 26 THEN '49051' -- Wasatch
-            WHEN COUNTYNAME.id = 27 THEN '49053' -- Washington
-            WHEN COUNTYNAME.id = 28 THEN '49055' -- Wayne
-            WHEN COUNTYNAME.id = 29 THEN '49057' -- Weber
+            WHEN COUNTYNAME.id = 2  THEN '001' -- Beaver
+            WHEN COUNTYNAME.id = 3  THEN '003' -- Box Elder
+            WHEN COUNTYNAME.id = 4  THEN '005' -- Cache
+            WHEN COUNTYNAME.id = 5  THEN '007' -- Carbon
+            WHEN COUNTYNAME.id = 6  THEN '009' -- Daggett
+            WHEN COUNTYNAME.id = 7  THEN '011' -- Davis
+            WHEN COUNTYNAME.id = 8  THEN '013' -- Duchesne
+            WHEN COUNTYNAME.id = 9  THEN '015' -- Emery
+            WHEN COUNTYNAME.id = 10 THEN '017' -- Garfield
+            WHEN COUNTYNAME.id = 11 THEN '019' -- Grand
+            WHEN COUNTYNAME.id = 12 THEN '021' -- Iron
+            WHEN COUNTYNAME.id = 13 THEN '023' -- Juab
+            WHEN COUNTYNAME.id = 14 THEN '025' -- Kane
+            WHEN COUNTYNAME.id = 15 THEN '027' -- Millard
+            WHEN COUNTYNAME.id = 16 THEN '029' -- Morgan
+            WHEN COUNTYNAME.id = 17 THEN '031' -- Piute
+            WHEN COUNTYNAME.id = 18 THEN '033' -- Rich
+            WHEN COUNTYNAME.id = 1  THEN '035' -- Salt Lake
+            WHEN COUNTYNAME.id = 19 THEN '037' -- San Juan
+            WHEN COUNTYNAME.id = 20 THEN '039' -- Sanpete
+            WHEN COUNTYNAME.id = 21 THEN '041' -- Sevier
+            WHEN COUNTYNAME.id = 22 THEN '043' -- Summit
+            WHEN COUNTYNAME.id = 23 THEN '045' -- Tooele
+            WHEN COUNTYNAME.id = 24 THEN '047' -- Uintah
+            WHEN COUNTYNAME.id = 25 THEN '049' -- Utah
+            WHEN COUNTYNAME.id = 26 THEN '051' -- Wasatch
+            WHEN COUNTYNAME.id = 27 THEN '053' -- Washington
+            WHEN COUNTYNAME.id = 28 THEN '055' -- Wayne
+            WHEN COUNTYNAME.id = 29 THEN '057' -- Weber
+        ELSE ''
         END,
-    'n/a' as District,  -- Utah doesn't have state fire districts
+    '' as District,  -- Utah doesn't have state fire districts
     INCIDENT.[pointOfOrigin].Lat as Latitude,
     INCIDENT.[pointOfOrigin].Long as Longitude,
     "StatisticalCauseCode" = 
@@ -70,6 +90,7 @@ SELECT
                 THEN '11' -- Power line
             WHEN LKUP.id IN (482)
                 THEN '12' -- Structure
+        ELSE ''
         END,
     "OwnershipCode" = 
         CASE
@@ -85,13 +106,14 @@ SELECT
                 THEN 'P' -- Private
             WHEN LKUPagency.id IN (98, 40, 92, 374)
                 THEN 'O' -- Other
+        ELSE ''
         END,
-    DETAILS.homesThreatened as  ResidencesThreatened,
-    DETAILS.homesDestroyed as ResidencesDestroyed,
-    DETAILS.structuresThreatened as OtherStructuresThreatened,
-    DETAILS.structuresDestroyed as OtherStructuresDestroyed,
-    ADMIN.numFireFighterInjuries as NumberInjuries,
-    ADMIN.numFireFighterFatalities as NumberFatalities,
+    ISNULL(DETAILS.homesThreatened, '') as  ResidencesThreatened,
+    ISNULL(DETAILS.homesDestroyed, '') as ResidencesDestroyed,
+    ISNULL(DETAILS.structuresThreatened, '') as OtherStructuresThreatened,
+    ISNULL(DETAILS.structuresDestroyed, '') as OtherStructuresDestroyed,
+    ISNULL(ADMIN.numFireFighterInjuries, '') as NumberInjuries,
+    ISNULL(ADMIN.numFireFighterFatalities, '') as NumberFatalities,
     ROUND(INCIDENT.TotalAcres, 3) as FinalFireAcreQuantity,
     'N' as DeleteFlag
 
